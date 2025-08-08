@@ -7,6 +7,7 @@ use MagentoSync\Helpers\Logger;
 use MagentoSync\Services\UrlRewriteService;
 use MagentoSync\Services\ActivityLogger;
 use MagentoSync\Services\AttributeResolverService;
+use MagentoSync\Services\CategoryService;
 use Illuminate\Database\Capsule\Manager as DB;
 
 class ProductService {
@@ -99,6 +100,31 @@ class ProductService {
                         }
                     } catch (\Throwable $e) {
                         Logger::log("DB FAIL [$table] for attribute '{$code}': " . $e->getMessage());
+                    }
+                }
+            }
+        }
+
+        // Handle categories
+        if (isset($data['categories']) && is_array($data['categories'])) {
+            foreach ($data['categories'] as $categoryMap) {
+                foreach ($categoryMap as $rootName => $childName) {
+                    if ($dryRun) {
+                        Logger::log("[DRY RUN] Would assign product {$data['sku']} to category: {$childName} under root={$rootName}");
+                    } else {
+                        $categoryId = CategoryService::ensureCategory($rootName, $childName, $dryRun);
+                        if ($categoryId) {
+                            try {
+                                DB::table('catalog_category_product')->insertOrIgnore([
+                                    'category_id' => $categoryId,
+                                    'product_id'  => $product->entity_id,
+                                    'position'    => 0,
+                                ]);
+                                Logger::log("🔗 Assigned product {$data['sku']} to category ID: {$categoryId}");
+                            } catch (\Throwable $e) {
+                                Logger::log("❌ Failed to assign product {$data['sku']} to category: " . $e->getMessage());
+                            }
+                        }
                     }
                 }
             }
