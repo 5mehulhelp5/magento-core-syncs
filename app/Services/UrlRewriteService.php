@@ -68,10 +68,14 @@ class UrlRewriteService {
     }
 
     protected static function generateUrlKey(string $input): string {
+        // Basic transliteration removal — for production consider using a robust library
         $slug = strtolower($input);
-        // Replace any characters that are NOT alphanumeric, hyphen, or underscore with a hyphen
-        $slug = preg_replace('/[^a-z0-9_-]+/i', '-', $slug);
-        // Trim hyphens from the beginning and end of the string
-        return trim($slug, '-');
+        $slug = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $slug);
+        $slug = preg_replace('/[^a-z0-9\-]+/i', '-', $slug);
+        $slug = preg_replace('/-+/', '-', $slug);
+        $slug = trim($slug, '-');
+        // prevent empty slug
+        if ($slug === '') $slug = 'product';
+        return $slug;
     }
 }

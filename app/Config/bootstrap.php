@@ -10,9 +10,13 @@ $capsule->addConnection([
     'database'  => $env['db']['connection']['default']['dbname'],
     'username'  => $env['db']['connection']['default']['username'],
     'password'  => $env['db']['connection']['default']['password'],
-    'charset'   => 'utf8',
-    'collation' => 'utf8_unicode_ci',
+    'charset'   => 'utf8mb4',
+    'collation' => 'utf8mb4_unicode_ci',
     'prefix'    => '',
+    'options'   => [
+        \PDO::ATTR_EMULATE_PREPARES => false,
+        \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION
+    ]
 ]);
 $capsule->setAsGlobal();
 $capsule->bootEloquent();
